@@ -6,7 +6,16 @@ defmodule WebhookPlugTest do
   @secret_key "SECRET_KEY"
   @opts WebhookPlug.init([secret_key: @secret_key])
 
-  test "valid signature" do
+  test "do not allow all other methods except POST" do
+    conn = conn(:get, "/callback", "{}")
+
+    conn = WebhookPlug.call(conn, @opts)
+
+    assert conn.state == :sent
+    assert conn.status == 405
+  end
+
+  test "accept if the request has valid signature" do
     request_body = "{}"
     conn = conn(:post, "/callback", request_body)
     |> put_req_header("x-line-signature", signature(@secret_key, request_body))
@@ -17,7 +26,7 @@ defmodule WebhookPlugTest do
     assert conn.status == 200
   end
 
-  test "no signature" do
+  test "reject if the request has no signature" do
     conn = conn(:post, "/callback", "{}")
 
     conn = WebhookPlug.call(conn, @opts)
