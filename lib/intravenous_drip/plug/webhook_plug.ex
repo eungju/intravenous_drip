@@ -7,7 +7,10 @@ defmodule WebhookPlug do
 
   def call(conn, opts) do
     secret_key = Keyword.get(opts, :secret_key)
-    signature = get_req_header(conn, "x-line-signature")
+    signature = case get_req_header(conn, "x-line-signature") do
+      [] -> ""
+      [v] -> v
+    end
     {:ok, request_body, conn} = read_body(conn)
     if Webhook.validate_signature(secret_key, request_body, signature) do
       conn |> send_resp(200, "")
