@@ -34,4 +34,15 @@ defmodule WebhookPlugTest do
     assert conn.state == :sent
     assert conn.status == 400
   end
+
+  test "requests contain events" do
+    request_body = ~s({"event": []})
+    conn = conn(:post, "/callback", request_body)
+    |> put_req_header("x-line-signature", signature(@secret_key, request_body))
+
+    conn = WebhookPlug.call(conn, @opts)
+
+    assert conn.state == :sent
+    assert conn.status == 200
+  end
 end
