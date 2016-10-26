@@ -1,11 +1,13 @@
 defmodule Webhook do
-  @spec signature(binary, binary) :: binary
-  def signature(secret, body) do
-    :crypto.hmac(:sha256, secret, body) |> Base.encode64
+  def start_link() do
+    GenEvent.start_link([name: __MODULE__])
   end
 
-  @spec validate_signature(binary, binary, binary) :: boolean
-  def validate_signature(secret, body, signature) do
-    signature(secret, body) == signature
+  def stop() do
+    GenEvent.stop(__MODULE__)
+  end
+
+  def event(event) do
+    GenEvent.notify(__MODULE__, {:event, event})
   end
 end
